@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 3D T-Shirt </title>
+    <link rel="stylesheet" href="./src/css/styles.css">
+    <!-- Load MediaPipe scripts with defer to ensure availability -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675471629/holistic.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./public/libs/three.module.js",
+            "three/addons/controls/OrbitControls.js": "./public/libs/OrbitControls.js",
+            "three/addons/loaders/RGBELoader.js": "./public/libs/RGBELoader.js",
+            "three/addons/loaders/GLTFLoader.js": "./public/libs/GLTFLoader.js",
+            "three/addons/utils/BufferGeometryUtils.js": "./public/utils/BufferGeometryUtils.js",
+            "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.2/+esm"
+        }
+    }
+</script>
+    <!-- Debug CDN loading -->
+    <script>
+        window.addEventListener('load', () => {
+            console.log('CDN scripts loaded. window.Holistic:', typeof window.Holistic);
+        });
+    </script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <canvas id="canvas" aria-label="T-Shirt Preview"></canvas>
+        <video id="video" autoplay playsinline style="display: none;"></video>
+        <div id="loader" class="spinner" aria-label="Loading Indicator">Loading...</div>
+    </div>
+    <div id="controls">
+        <div class="header">
+            <h2>Customize_IT</h2>
+            <button class="toggle-button" aria-label="Toggle Controls">▼</button>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h3>Model Selection</h3>
+                <div class="control-row">
+                    <label>Model</label>
+                    <select id="modelSelect" aria-label="Select Model">
+                        <option value="T-Shirt 1">T-Shirt 1</option>
+                        <option value="T-Shirt 2">T-Shirt 2</option>
+                    </select>
+                </div>
+            </div>
+            <div class="section">
+                <h3>Color Palette</h3>
+                <div class="color-row">
+                    <label>Shirt</label>
+                    <input type="color" id="colorPicker" value="#ffffff" aria-label="Shirt Color">
+                </div>
+                <div class="button-row">
+                    <button id="removeColorButton" class="action-btn">Remove</button>
+                </div>
+            </div>
+            <div class="section">
+                <h3>Text</h3>
+                <div class="control-row">
+                    <label>Text</label>
+                    <input type="text" id="textInput" placeholder="Enter Text" aria-label="Text Input">
+                </div>
+                <div class="color-row">
+                    <label>Color</label>
+                    <input type="color" id="textColorPicker" value="#000000" aria-label="Text Color">
+                </div>
+                <div class="control-row">
+                    <label>Position</label>
+                    <select id="printOption" aria-label="Text Position">
+                        <option value="front">Front</option>
+                        <option value="back">Back</option>
+                        <option value="both">Front & Back</option>
+                        <option value="many">Random</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <label>X Offset</label>
+                    <input type="range" id="textXOffset" min="-200" max="200" step="5" value="0" aria-label="Text X Offset">
+                    <span class="slider-value" id="textXOffsetValue">0</span>
+                </div>
+                <div class="control-row">
+                    <label>Y Offset</label>
+                    <input type="range" id="textYOffset" min="-100" max="100" step="5" value="0" aria-label="Text Y Offset">
+                    <span class="slider-value" id="textYOffsetValue">0</span>
+                </div>
+                <div class="control-row">
+                    <label>Font Size</label>
+                    <input type="range" id="textFontSize" min="10" max="100" step="5" value="30" aria-label="Text Font Size">
+                    <span class="slider-value" id="textFontSizeValue">30</span>
+                </div>
+                <div class="button-row">
+                    <button id="applyTextButton" class="action-btn">Apply</button>
+                    <button id="removeTextButton" class="action-btn">Remove</button>
+                </div>
+            </div>
+            <div class="section">
+                <h3>Texture</h3>
+                <div class="control-row">
+                    <label>Upload</label>
+                    <input type="file" id="textureInput" accept="image/*" aria-label="Texture Upload">
+                </div>
+                <div class="control-row">
+                    <label>Style</label>
+                    <select id="texturePatternOption" aria-label="Texture Style">
+                        <option value="splatter">Splatter</option>
+                        <option value="gradient">Gradient</option>
+                        <option value="grid">Grid</option>
+                    </select>
+                </div>
+                <div class="button-row">
+                    <button id="applyTextureButton" class="action-btn">Apply</button>
+                    <button id="removeTextureButton" class="action-btn">Remove</button>
+                </div>
+            </div>
+            <div class="section">
+                <h3>Logo</h3>
+                <div class="control-row">
+                    <label>Upload</label>
+                    <input type="file" id="logoInput" accept="image/*" aria-label="Logo Upload">
+                </div>
+                <div class="control-row">
+                    <label>Position</label>
+                    <select id="logoPosition" aria-label="Logo Position">
+                        <option value="front">Front</option>
+                        <option value="back">Back</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <label>Width</label>
+                    <input type="range" id="logoWidth" min="50" max="300" step="10" value="120" aria-label="Logo Width">
+                    <span class="slider-value" id="logoWidthValue">120</span>
+                </div>
+                <div class="control-row">
+                    <label>Height</label>
+                    <input type="range" id="logoHeight" min="50" max="300" step="10" value="120" aria-label="Logo Height">
+                    <span class="slider-value" id="logoHeightValue">120</span>
+                </div>
+                <div class="control-row">
+                    <label>Lock</label>
+                    <input type="checkbox" id="lockAspectRatio" checked aria-label="Lock Aspect Ratio">
+                </div>
+                <div class="control-row">
+                    <label>Opacity</label>
+                    <input type="range" id="logoOpacity" min="0" max="1" step="0.1" value="1" aria-label="Logo Opacity">
+                    <span class="slider-value" id="logoOpacityValue">1</span>
+                </div>
+                <div class="control-row">
+                    <label>X Offset</label>
+                    <input type="range" id="logoXOffset" min="-100" max="100" step="5" value="0" aria-label="Logo X Offset">
+                    <span class="slider-value" id="logoXOffsetValue">0</span>
+                </div>
+                <div class="control-row">
+                    <label>Y Offset</label>
+                    <input type="range" id="logoYOffset" min="-100" max="100" step="5" value="0" aria-label="Logo Y Offset">
+                    <span class="slider-value" id="logoYOffsetValue">0</span>
+                </div>
+                <div class="button-row">
+                    <button id="applyLogoButton" class="action-btn">Apply</button>
+                    <button id="removeLogoButton" class="action-btn">Remove</button>
+                </div>
+            </div>
+            <div class="button-row">
+                <button id="tryOnButton" class="action-btn">Try On</button>
+             
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
