@@ -26,6 +26,9 @@ export function setupGUI() {
     const toggleBtn = gui.querySelector('.toggle-button');
     const content = gui.querySelector('.content');
 
+    // Ensure content is hidden when collapsed on load
+    content.style.display = gui.classList.contains('collapsed') ? 'none' : 'block';
+
     toggleBtn.addEventListener('click', () => {
         gui.classList.toggle('collapsed');
         content.style.display = gui.classList.contains('collapsed') ? 'none' : 'block';
@@ -101,7 +104,7 @@ export function setupGUI() {
             currentModel.position.set(0, 0, -2);
             currentModel.scale.set(1, 1, 1);
             currentModel.rotation.set(0, 0, 0);
-            console.log(`Using model ${currentModelName} for AR mode, position=[0, 0, -2], scale=[1, 1, 1]`);
+            console.log(`Using model ${currentModelName} for AR mode, position=[0, 0, -2], Jenner scale=[1, 1, 1]`);
 
             video.style.display = 'block';
             await startARMode();
