@@ -35,8 +35,8 @@ export function setupGUI() {
     });
 
     fabricLayerCanvas = document.createElement("canvas");
-    fabricLayerCanvas.width = 1024;
-    fabricLayerCanvas.height = 256;
+    fabricLayerCanvas.width = 2048; // Increased resolution for clarity
+    fabricLayerCanvas.height = 512; // Increased resolution for clarity
     const fabricCtx = fabricLayerCanvas.getContext("2d");
     new THREE.TextureLoader().load("./public/Fabric.jpg", (loadedTexture) => {
         fabricCtx.drawImage(loadedTexture.image, 0, 0, fabricLayerCanvas.width, fabricLayerCanvas.height);
@@ -270,8 +270,8 @@ export function applyToTShirt() {
     model.traverse((child) => {
         if (child.isMesh) {
             compositeCanvas = document.createElement("canvas");
-            compositeCanvas.width = 1024;
-            compositeCanvas.height = 256;
+            compositeCanvas.width = 2048; // Increased resolution for clarity
+            compositeCanvas.height = 512; // Increased resolution for clarity
             const ctx = compositeCanvas.getContext("2d");
 
             ctx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
@@ -306,8 +306,8 @@ export function applyToTShirt() {
 
 function updateTextureLayer() {
     textureLayerCanvas = document.createElement("canvas");
-    textureLayerCanvas.width = 1024;
-    textureLayerCanvas.height = 256;
+    textureLayerCanvas.width = 2048; // Increased resolution for clarity
+    textureLayerCanvas.height = 512; // Increased resolution for clarity
     const ctx = textureLayerCanvas.getContext("2d");
     if (currentTexture.patternType && currentTexture.colors.length > 0) {
         applyPattern(ctx, currentTexture.patternType, currentTexture.colors, textureLayerCanvas.width, textureLayerCanvas.height);
@@ -316,38 +316,61 @@ function updateTextureLayer() {
 
 function updateTextLayer() {
     textLayerCanvas = document.createElement("canvas");
-    textLayerCanvas.width = 1024;
-    textLayerCanvas.height = 256;
-    const ctx = textLayerCanvas.getContext("2d");
+    textLayerCanvas.width = 2048; // High resolution for clarity
+    textLayerCanvas.height = 512; // High resolution for clarity
+    const ctx = textLayerCanvas.getContext("2d", { alpha: true, desynchronized: false }); // Optimize for text rendering
+    ctx.imageSmoothingEnabled = true; // Enable anti-aliasing
+    ctx.imageSmoothingQuality = "high"; // Maximum quality for scaling
+    ctx.textRendering = "optimizeLegibility"; // Enhance text clarity
+    ctx.fontKerning = "normal"; // Ensure proper font spacing
+    ctx.textBaseline = "middle"; // Align text vertically
+    ctx.textAlign = "center"; // Align text horizontally
+
     if (currentText.text && currentText.positions.length > 0) {
-        ctx.font = `${currentText.fontSize || 30}px Arial`;
-        ctx.fillStyle = currentText.color;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
+        // Scale font size for higher resolution and clarity
+        const scaledFontSize = (currentText.fontSize || 30) * 2;
+        ctx.font = `bold ${scaledFontSize}px Arial`; // Use bold for better definition
+        ctx.fillStyle = currentText.color; // Set text color
+        ctx.strokeStyle = currentText.color; // Add subtle stroke for edge clarity
+        ctx.lineWidth = scaledFontSize * 0.02; // Thin stroke proportional to font size
+
         currentText.positions.forEach(pos => {
-            ctx.fillText(currentText.text, pos.x, pos.y);
+            const x = pos.x * 2; // Scale position for higher resolution
+            const y = pos.y * 2; // Scale position for higher resolution
+            ctx.fillText(currentText.text, x, y); // Render filled text
+            ctx.strokeText(currentText.text, x, y); // Render stroked text for sharpness
         });
     }
 }
 
 function updateLogoLayer() {
     logoLayerCanvas = document.createElement("canvas");
-    logoLayerCanvas.width = 1024;
-    logoLayerCanvas.height = 256;
-    const ctx = logoLayerCanvas.getContext("2d");
+    logoLayerCanvas.width = 2048; // High resolution for maximum clarity
+    logoLayerCanvas.height = 512; // High resolution for maximum clarity
+    const ctx = logoLayerCanvas.getContext("2d", { alpha: true, desynchronized: false, willReadFrequently: false }); // Optimize for pixel-perfect rendering
+    ctx.imageSmoothingEnabled = false; // Disable smoothing for pixel-perfect sharpness
+    ctx.globalCompositeOperation = "source-over"; // Draw logo directly to preserve exact colors
+
     if (currentLogo.image) {
-        const logoWidth = currentLogo.width;
-        const logoHeight = currentLogo.height;
-        const xOffset = currentLogo.xOffset;
-        const yOffset = currentLogo.yOffset;
-        const baseX = currentLogo.position === "front" ? 276 : 723;
-        const baseY = currentLogo.position === "front" ? 148.3125 : 142.6875;
+        const logoWidth = currentLogo.width * 2; // Scale for higher resolution
+        const logoHeight = currentLogo.height * 2; // Scale for higher resolution
+        const xOffset = currentLogo.xOffset * 2; // Scale for higher resolution
+        const yOffset = currentLogo.yOffset * 2; // Scale for higher resolution
+        const baseX = currentLogo.position === "front" ? 552 : 1446; // Scaled base positions (276*2, 723*2)
+        const baseY = currentLogo.position === "front" ? 296.625 : 285.375; // Scaled base positions (148.3125*2, 142.6875*2)
         const x = baseX + xOffset;
         const y = baseY + yOffset;
 
-        ctx.globalAlpha = currentLogo.opacity;
-        ctx.drawImage(currentLogo.image, x, y, logoWidth, logoHeight);
-        ctx.globalAlpha = 1.0;
+        // Clear canvas to prevent artifacts
+        ctx.clearRect(0, 0, logoLayerCanvas.width, logoLayerCanvas.height);
+
+        // Draw logo with exact fidelity
+        ctx.globalAlpha = currentLogo.opacity; // Apply opacity without affecting colors
+        ctx.drawImage(currentLogo.image, x, y, logoWidth, logoHeight); // Draw logo pixel-perfect
+        ctx.globalAlpha = 1.0; // Reset opacity
+
+        // Log for debugging
+        console.log(`Logo rendered: width=${logoWidth}, height=${logoHeight}, x=${x}, y=${y}, opacity=${currentLogo.opacity}`);
     }
 }
 
